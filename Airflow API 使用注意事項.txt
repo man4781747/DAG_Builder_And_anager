@@ -1,0 +1,24 @@
+Airflow HTTP API 相關設定
+
+1. Airflow HTTP API default 是關閉的
+	https://airflow.apache.org/docs/apache-airflow/stable/security/api.html
+	可用指令 "airflow config get-value api auth_backend" 看server現在吃什麼設定
+	default : airflow.api.auth.backend.deny_all
+
+	若要修改，要到 airflow.cfg 將 auth_backend 改掉 (測試改成 airflow.api.auth.backend.basic_auth)
+
+	# How to authenticate users of the API. See
+	# https://airflow.apache.org/docs/apache-airflow/stable/security.html for possible values.
+	# ("airflow.api.auth.backend.default" allows all requests for historic reasons)
+	auth_backend = airflow.api.auth.backend.basic_auth
+
+	更改後server重開即可 (可用 "airflow config get-value api auth_backend" 檢查)
+
+2. API 清單 https://airflow.apache.org/docs/apache-airflow/stable/stable-rest-api-ref.html
+	API範例
+	
+	requests.get("http://127.0.0.1:8080/api/v1/dags", auth=(S_account, S_password))
+	
+	
+	
+	

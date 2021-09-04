@@ -1,0 +1,30 @@
+version: "3.7"
+
+services:
+  web:
+    container_name: django_server
+    build: .\DockerFiles\DjangoServer
+    ports:
+        - 8000:8000
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+        - .\Volume\DjangoServer\mydjango:/code
+    networks:
+        - my-network
+
+  airflow:
+    container_name: airflow
+    build: .\DockerFiles\AirFlow
+    command: python3 /code/RunAirFlowServer.py
+    ports:
+        - 8080:8080
+    volumes:
+        - .\Airflow_Volume:/root/airflow
+        - .\DockerFiles\AirFlow\pythonCode:/code
+    networks:
+        - my-network
+        
+        
+networks:
+    my-network:
+        name: my-app-network

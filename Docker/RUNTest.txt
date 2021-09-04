@@ -1,0 +1,10 @@
+docker build -t mytomcat . --no-cache
+
+docker run -it -p 8080:8080 -v C:\Users\man47\Desktop\國泰題目\Docker\Volume:/VolumeFile mytomcat
+
+
+docker-compose build
+
+docker-compose run --service-ports
+
+docker-compose up

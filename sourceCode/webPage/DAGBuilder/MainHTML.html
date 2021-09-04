@@ -1,0 +1,389 @@
+ <!-- {% verbatim %} -->
+ <!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Air Flow DAG File Builder</title>
+	<script src="DateFormat.js"></script>
+	<!-- 導入Vue -->
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	<!-- 導入MD5模組(原本想計算上傳檔案的MD5數值來判斷是否重複上傳，後來用其他數值取代了) -->
+	<!-- 引此此模組沒在使用，留下只為了記錄以方便日後有需要使用的話可以拿來用 -->
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.10.0/js/md5.min.js"></script> -->
+	<!-- <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script> -->
+	<!-- <link href="https://{{cdn}}/prism@v1.x/themes/prism.css" rel="stylesheet" /> -->
+	
+	
+	<!-- https://openbase.com/js/vue-prism-editor -->
+	<!-- Prism Editor -->
+	<script src="https://unpkg.com/vue-prism-editor"></script>
+	<link rel="stylesheet" href="https://unpkg.com/vue-prism-editor/dist/prismeditor.min.css" />
+
+	<!-- custom highlighter: -->
+	<script src="https://unpkg.com/prismjs/prism.js"></script>
+	<script src="https://unpkg.com/prismjs@1.24.1/components/prism-python.min.js"></script>
+	<link rel="stylesheet" href="https://unpkg.com/prismjs/themes/prism-tomorrow.css" />
+
+	<style>
+	  .height-200{
+		height: 200px  
+	  }
+	  
+	  .my-editor {
+		/* we dont use `language-` classes anymore so thats why we need to add background and text color manually */
+		background: #2d2d2d;
+		color: #ccc;
+
+		/* you must provide font-family font-size line-height. Example:*/
+		font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
+		font-size: 14px;
+		line-height: 1.5;
+		padding: 5px;
+	  }
+
+	  /* optional class for removing the outline */
+	  .prism-editor__textarea:focus {
+		outline: none;
+	  }
+	</style>
+	
+	
+	<link rel="stylesheet" href="mystyle.css">
+</head>
+<body>
+	<div id="app">
+		<!-- 左半邊視窗部分 -->
+		<div id="left_window">
+			<!-- 基本資訊設定視窗 -->
+			<div class="BigBlock">
+				<!-- DAG python 檔案名稱設定 -->
+				<div class="input_area">
+					<label class="input_area_label">DAG.py file name:</label>
+					<input v-model="DAGpyFileName">
+				</div>
+				<!-- DAG owner 設定 -->
+				<div class="input_area">
+					<label class="input_area_label">Owner:</label>
+					<input v-model="ownerValues">
+				</div>
+				<!-- DAG ID 設定 -->
+				<div class="input_area">
+					<label class="input_area_label">DAG ID:</label>
+					<input v-model="dagIdValue">
+				</div>
+				<!-- DAG schedule 設定 -->
+				<div class="input_area">
+					<label class="input_area_label">Schedule:</label>
+					{{cronStringGet}}
+					<!-- 時間設定視窗 -->
+					<!-- 時間設定分為5項 分,時,日,月,weekday -->
+					<!-- 其中分,時,日,月的設定視窗皆可以選擇為'指定'或'間隔'形式 -->
+					<!-- 各視窗架構如下 -->
+					<!-- --------------------------- -->
+					<!-- - '指定'下的文字顯示內容 -->
+					<!-- - '間隔'下的文字顯示內容 -->
+					<!-- - 詳細設定視窗 -->
+					<!--   - '指定' & '間隔' 切換按鈕 -->
+					<!--   - '指定'模式下,時間選擇視窗 -->
+					<!-- - 視窗開關按鈕 -->
+					
+					<div>
+						<!-- 月選取文字部分 -->
+						<a class="changeCronATag">
+							<!-- '指定'下的文字顯示內容 -->
+							<label v-show="D_cronDataSetting.Month.cronType=='1'">
+								在{{cornMonth=='*' ? '每個' : cornMonth}}月
+							</label>
+							<!-- '間隔'下的文字顯示內容 -->
+							<label v-show="D_cronDataSetting.Month.cronType=='2'">
+								每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="12" v-model="D_cronDataSetting.Month.cron_Value"> 個月的
+							</label>
+							<!-- 詳細設定視窗 -->
+							<div v-show='D_cronDataSetting.Month.windowShow' v-on:click.stop="" class="cronChangeWindow">
+								<select v-model="D_cronDataSetting.Month.cronType">
+									<option selected value=1>指定</option>
+									<option value=2>間隔</option>
+								</select>
+								<button v-show="D_cronDataSetting.Month.cronType == '1'" @click='allSwitchButtonClick("Month")'>
+									{{D_cronDataSetting.Month.cronCollect.length!=D_cronDataSetting.Month.maxLength?'全選':'全取消'}}
+								</button>
+								<!-- '指定'下,時間選擇視窗 -->
+								<div v-show="D_cronDataSetting.Month.cronType == '1'" class='cronValueChoseWindow'>
+									<div style="clear:both;display: inline-block;width: 100%;">
+										<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Month.maxValue+1).keys()].slice(D_cronDataSetting.Month.valueBias)">
+											<label>{{list}}</label>
+											<input type="checkbox" :value="list" v-model="D_cronDataSetting.Month.cronCollect"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- 視窗開關按鈕 -->
+							<div class='cron_input_area_switch_button' v-on:click="switchCronChangeWindow('Month')">
+								{{D_cronDataSetting.Month.windowShow ? '▲' : '▼'}}
+							</div>
+						</a>
+						<!-- 日期選取文字部分 -->
+						<a class="changeCronATag">
+							<label v-show="D_cronDataSetting.Day.cronType=='1'">
+								{{cornDay=='*' ? '每一日中' : '的'+cornDay+'號中'}}
+							</label>
+							<label v-show="D_cronDataSetting.Day.cronType=='2'">
+								每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="31" v-model="D_cronDataSetting.Day.cron_Value"> 天中
+							</label>
+							<div v-show='D_cronDataSetting.Day.windowShow' v-on:click.stop="" class="cronChangeWindow">
+								<select v-model="D_cronDataSetting.Day.cronType">
+									<option selected value=1>指定</option>
+									<option value=2>間隔</option>
+								</select>
+								<button v-show="D_cronDataSetting.Day.cronType == '1'" @click='allSwitchButtonClick("Day")'>
+									{{D_cronDataSetting.Day.cronCollect.length!=D_cronDataSetting.Day.maxLength?'全選':'全取消'}}
+								</button>
+								<div v-show="D_cronDataSetting.Day.cronType == '1'" class='cronValueChoseWindow'>
+									<div style="clear:both;display: inline-block;width: 100%;">
+										<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Day.maxValue+1).keys()].slice(D_cronDataSetting.Day.valueBias)">
+											<label>{{list}}</label>
+											<input type="checkbox" :value="list" v-model="D_cronDataSetting.Day.cronCollect"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class='cron_input_area_switch_button' v-on:click="switchCronChangeWindow('Day')">
+								{{D_cronDataSetting.Day.windowShow ? '▲' : '▼'}}
+							</div>
+						</a>
+						<!-- 小時選取文字部分 -->
+						<a class="changeCronATag" class="cronChangeWindow">
+							<label v-show="D_cronDataSetting.Hour.cronType=='1'">
+								{{cornHour=='*' ? '每個小時' : cornHour+'點'}}
+							</label>
+							<label v-show="D_cronDataSetting.Hour.cronType=='2'">
+								每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="23" v-model="D_cronDataSetting.Hour.cron_Value"> 小時中 的
+							</label>
+							<div v-show='D_cronDataSetting.Hour.windowShow' v-on:click.stop="" class="cronChangeWindow">
+								<select v-model="D_cronDataSetting.Hour.cronType">
+									<option selected value=1>指定</option>
+									<option value=2>間隔</option>
+								</select>
+								<button v-show="D_cronDataSetting.Hour.cronType == '1'" @click='allSwitchButtonClick("Hour")'>
+									{{D_cronDataSetting.Hour.cronCollect.length!=D_cronDataSetting.Hour.maxLength?'全選':'全取消'}}
+								</button>
+								<div v-show="D_cronDataSetting.Hour.cronType == '1'" class='cronValueChoseWindow'>
+									<div style="clear:both;display: inline-block;width: 100%;">
+										<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Hour.maxValue+1).keys()]">
+											<label>{{list}}</label>
+											<input type="checkbox" :value="list" v-model="D_cronDataSetting.Hour.cronCollect"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class='cron_input_area_switch_button' v-on:click="switchCronChangeWindow('Hour')">
+								{{D_cronDataSetting.Hour.windowShow ? '▲' : '▼'}}
+							</div>
+						</a>
+						<!-- 分鐘選取文字部分 -->
+						<a class="changeCronATag" class="cronChangeWindow">
+							<label v-show="D_cronDataSetting.Minute.cronType=='1'">
+								{{cornMinute=='*' ? '每一分鐘' : cornMinute+'分'}}
+							</label>
+							<label v-show="D_cronDataSetting.Minute.cronType=='2'">
+									每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="59" v-model="D_cronDataSetting.Minute.cron_Value"> 分鐘
+							</label>
+							<div v-show='D_cronDataSetting.Minute.windowShow' v-on:click.stop="" class="cronChangeWindow">
+								<select v-model="D_cronDataSetting.Minute.cronType">
+									<option selected value=1>指定</option>
+									<option value=2>間隔</option>
+								</select>
+								<button v-show="D_cronDataSetting.Minute.cronType == '1'" @click='allSwitchButtonClick("Minute")'>
+									{{D_cronDataSetting.Minute.cronCollect.length!=D_cronDataSetting.Minute.maxLength?'全選':'全取消'}}
+								</button>
+								<div v-show="D_cronDataSetting.Minute.cronType == '1'" class='cronValueChoseWindow'>
+									<div style="clear:both;display: inline-block;width: 100%;">
+										<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Minute.maxValue+1).keys()]">
+											<label>{{list}}</label>
+											<input type="checkbox" :value="list" v-model="D_cronDataSetting.Minute.cronCollect"/>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class='cron_input_area_switch_button' v-on:click="switchCronChangeWindow('Minute')">
+								{{D_cronDataSetting.Minute.windowShow ? '▲' : '▼'}}
+							</div>
+						</a>
+						<!-- Weekday選取文字部分 -->
+						<!-- 指定日子 -->
+						<a class="changeCronATag" style='width: calc(100% - 13.3px);height: 1.5em;'>
+							<label style="top: -0.5em;position: relative;">並且為周</label>
+							<div style="clear:both;display: inline-block;">
+								<div class="numberChoseCheckBox" v-for="list in [...Array(7).keys()]">
+									<label>{{weekdayChinese[list]}}</label>
+									<input type="checkbox" :value='list' v-model="cronWeekDayCollect"/>
+								</div>
+							</div>
+							<label style="top: -0.5em;position: relative;">時執行</label>
+						</a>
+					</div>
+					<div class="preViewDatetime_window">
+						5年內下10次執行時間預覽
+						<div class="preViewDatetime_list">
+							<div class="preViewDatetime_item" v-for="(S_time, index) of perViewCronDatetime">
+								{{S_time}}
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- Template searchpath 設定 -->
+				<div class="input_area">
+					<label class="input_area_label">Template searchpath:</label>
+					<input v-model="template_searchpath" style="width: calc(45vw - 200px);">
+				</div>
+				<!-- Description 設定 -->
+				<div class="input_area">
+					<label class="input_area_label">Description:</label>
+					<br>
+					<textarea id="description_textarea" v-model="dagDescriptionValue"></textarea>
+				</div>
+			</div>
+			<!-- DAG Tasks 設定視窗 -->
+			<div class="BigBlock">
+				<div style='padding:5px;'>
+					DAG Tasks
+					<!-- ToolBox 視窗 -->
+					<div class="ToolBox" v-show="dag_item_build_index.length!=0">
+						<button v-on:click="BuildNewDAGItem('BashOperator', null, '')">+</button>
+						<button @click="$refs.inputDAGsettingCSV.click()">載入csv檔案</button>
+						<button @click="clearAllDAGStaegs()">清空所有</button>
+						<button @click="$refs.OutputDAGStagesSettingCSV_A.click()">匯出設定檔</button>
+						<!-- CSV檔案 input DOM, 將其功能映射到別的地方，本體則隱藏起來  -->
+						<input v-show='false' ref="inputDAGsettingCSV" id='DAGsettingCSV' type="file" accept='.csv' @change="GetDAGsettingCSV($event.target.files[0])">
+						<!-- CSV檔案 output 按鈕, 將其功能映射到別的地方，本體則隱藏起來  -->
+						<a v-show='false' ref="OutputDAGStagesSettingCSV_A" onclick="OutputDAGStagesSettingCSV(this)" download="downlaod.csv" href="#">download</a>
+					</div>
+					<!-- DAG Tasks 設計視窗 -->
+					<div 
+						id='DargFileArea' 
+						ref="select_frame" 
+						:class="EmptyDAGSettingWindowClass"
+					>
+						<div id="DesignArea">
+							<!-- 拉動檔案區塊 -->
+							<div v-show="dag_item_build_index.length==0" class="EmptyDAGSettingWindow">
+								請點擊 
+								<button v-on:click="BuildNewDAGItem('BashOperator', null, '')">+</button>
+								或將csv檔案拉入此區域來載入設定，也可
+								<button @click="$refs.inputDAGsettingCSV.click()">點擊此處</button>
+								導入CSV檔案
+							</div>
+							<!-- Task 物件 -->
+							<div v-for="(keyChose, index) in dag_item_build_index">
+								<bash-operator-item 
+									v-if="dag_item_build_list[keyChose].type=='BashOperator'"
+									v-bind:post="dag_item_build_list[keyChose]"
+									v-bind:index="index"
+									v-bind:max_index="dag_item_build_index.length-1"
+									@delete-item="DelDAGItemByUuid"
+									@item-up="item_up"
+									@item-down="item_down"
+								></bash-operator-item>
+								<!-- 'PythonOperator' 以及 'RunPythonFile' 目前已停用，留下來當記錄 -->
+								<!-- <python-operator-item -->
+									<!-- v-else-if="dag_item_build_list[keyChose].type=='PythonOperator'" -->
+									<!-- v-bind:post="dag_item_build_list[keyChose]" -->
+									<!-- v-bind:index="index" -->
+									<!-- v-bind:max_index="dag_item_build_index.length-1" -->
+									<!-- @delete-item="DelDAGItemByUuid" -->
+									<!-- @item-up="item_up" -->
+									<!-- @item-down="item_down" -->
+								<!-- ></python-operator-item> -->
+								<!-- <run-python-file-item -->
+									<!-- v-else-if="dag_item_build_list[keyChose].type=='RunPythonFile'" -->
+									<!-- v-bind:post="dag_item_build_list[keyChose]" -->
+									<!-- v-bind:index="index" -->
+									<!-- v-bind:max_index="dag_item_build_index.length-1" -->
+									<!-- @delete-item="DelDAGItemByUuid" -->
+									<!-- @item-up="item_up" -->
+									<!-- @item-down="item_down" -->
+								<!-- ></run-python-file-item> -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		
+			<!-- 附件檔案上傳處 -->
+			<div>
+				<p>附件</p>
+				<div id='uploadFileArea' style="margin: 15px 15px 0px 0px;">
+					<div class="ToolBox" v-show="Object.keys(uploadFileList).length!=0">
+						<button @click="$refs.uploadFilesToServer.click()">新增檔案</button>
+						<!-- 附件檔案 input DOM, 將其功能映射到別的地方，本體則隱藏起來  -->
+						<input v-show='false' ref="uploadFilesToServer" id='inputTest' type="file" multiple="multiple" @change="inputTest($event.target.files)">
+					</div>
+					<div ref="select_uploadFileArea">
+						<div 
+							v-show="Object.keys(uploadFileList).length==0" 
+							class="EmptyDAGSettingWindow"
+							:class="EmptyDAGSettingWindowClass"
+						>
+							請將想上傳的檔案拉入此區域或
+							<button @click="$refs.uploadFilesToServer.click()">點擊此處</button>
+							選擇檔案
+						</div>
+						<div v-for="(item, key, index) in uploadFileList" class='uploadedFile' :style="item.styleSet"> 
+							<button @click="delUploadFile(key)">X</button>
+							<span  class='uploadedFile_label'>{{item.fileBlob.name}}</span>
+							<span  class='uploadedFile_status'>{{item.status}}</span>
+						</div>
+					</div>
+				</div>
+			</div>	
+		</div>
+		<!-- 右半邊視窗部分 -->
+		<div id="right_window">
+			<!-- DAG 檔案預覽視窗 -->
+			<div>
+				<p>DAG 檔案預覽</p>
+				<!-- <textarea readonly class="preview_textarea">{{DAGFileString}}</textarea> -->
+				<!-- <pre class="prettyprint preview_textarea"> -->
+					<!-- <code class="language-py">{{DAGFileString}}</code> -->
+				<!-- </pre> -->
+				<!-- <vue-code-highlight language="py"> -->
+				  <!-- <pre> -->
+				 <!-- {{DAGFileString}} -->
+				 <!-- </pre> -->
+				<!-- </vue-code-highlight> -->
+				<prism-editor 
+					class="my-editor height-200 preview_textarea" 
+					v-model="DAGFileString" 
+					:highlight="highlighter" 
+					line-numbers
+					readonly
+				></prism-editor>	
+			</div>
+			<!-- 上傳區塊 -->
+			<div style="margin-top: 10px;">
+				<button id='totalUploadButton' @click="uploadFilesToServer()">Upload</button>
+				<label id="DAGpythonFileUploadStatue">
+					{{DAGpythonFileUploadStatue}}
+				</label>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="test.js"></script>
+</body>
+</html> 
+
+<!-- <div class='SwitchButtom_Main'> -->
+	<!-- <div class='SwitchButtom_OutSide' v-on:click="switchCronType('Month')"> -->
+		<!-- <div class='SwitchButtom_Table'> -->
+		<!-- </div> -->
+		<!-- <div class='SwitchButtom_ButtomBody'  -->
+		<!-- :class="D_cronDataSetting.Month.cronType == '1' ? 'Buttom_On_Color Buttom_On_Left' : 'Buttom_Off_Color Buttom_Off_Left'" -->
+		<!-- > -->
+			<!-- <div class='SwitchButtom_Buttom_face' :class="D_cronDataSetting.Month.cronType == '1' ? 'Buttom_On_Color' : 'Buttom_Off_Color'"> -->
+					<!-- {{D_cronDataSetting.Month.cronType == '1' ? '指定' : '間隔'}} -->
+			<!-- </div> -->
+		<!-- </div> -->
+	<!-- </div> -->
+								<!-- </div> -->
+
+<!-- {% endverbatim %} -->

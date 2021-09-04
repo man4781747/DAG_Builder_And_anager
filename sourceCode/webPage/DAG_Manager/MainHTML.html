@@ -1,0 +1,96 @@
+ <!-- {% verbatim %} -->
+ <!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Air Flow DAG File Builder</title>
+	<!-- 導入Vue -->
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+	<link rel="stylesheet" href="mystyle.css">
+</head>
+<body>
+	<!-- <code class="prettyprint"> -->
+<!-- from django.conf.urls import url -->
+<!-- from . import views -->
+
+<!-- ''' -->
+<!-- 設定 API -->
+<!-- 1. test/   測試 Django 正常與否API -->
+<!-- 2. GetOneBoardName/ 傳送單個討論版名稱給使用者 -->
+<!-- ''' -->
+<!-- urlpatterns = [ -->
+    <!-- url(r'test/', views.test), -->
+    <!-- url(r'MainWeb/', views.MainWeb), -->
+    <!-- url(r'UploadFile/', views.GetUploadedFile), -->
+    <!-- url(r'UploadDAGPythonFile/', views.UploadDAGPythonFile), -->
+    <!-- url(r'GetDAGs/', views.GetDAGs_buildByDAGBuilder), -->
+    <!-- url(r'GetDAGRunsList/', views.GetDAGRunsList), -->
+<!-- ] -->
+
+	<!-- </code> -->
+	
+<!-- <pre class="prettyprint"> -->
+<!-- from django.conf.urls import url -->
+<!-- from . import views -->
+
+<!-- ''' -->
+<!-- 設定 API -->
+<!-- 1. test/   測試 Django 正常與否API -->
+<!-- 2. GetOneBoardName/ 傳送單個討論版名稱給使用者 -->
+<!-- ''' -->
+<!-- urlpatterns = [ -->
+    <!-- url(r'test/', views.test), -->
+    <!-- url(r'MainWeb/', views.MainWeb), -->
+    <!-- url(r'UploadFile/', views.GetUploadedFile), -->
+    <!-- url(r'UploadDAGPythonFile/', views.UploadDAGPythonFile), -->
+    <!-- url(r'GetDAGs/', views.GetDAGs_buildByDAGBuilder), -->
+    <!-- url(r'GetDAGRunsList/', views.GetDAGRunsList), -->
+<!-- ] -->
+<!-- </pre> -->
+	
+	<div id="app">
+		<table>
+			<thead>
+				<tr>
+					<th>DAG ID</th>
+					<th>Owner</th>
+					<th>Schedule</th>
+					<th>Runs</th>
+				<tr>
+			</thead>
+			<tbody>
+				<tr v-for="(item, index) of DAGList">
+					<td>{{item.dag_id}}</td>
+					<td>{{item.owners[0]}}</td>
+					<td>{{item.schedule_interval.value}}</td>
+					<td v-if="item.dagRuns != undefined">
+						<div>
+							<div class='dagRunStateCircle'>
+								{{
+									item.dagRuns.groups.success != undefined ? item.dagRuns.groups.success.length : ''
+								}}
+							</div>
+							<div class='dagRunStateCircle'>
+								{{
+									item.dagRuns.groups.running != undefined ? item.dagRuns.groups.running.length : ''
+								}}
+							</div>
+						</div>
+					</td>
+					<td v-else>
+						<div>尚未更新</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	
+		<!-- <div v-for="(item, index) of DAGList"> -->
+			<!-- {{item.dag_id}} -->
+		<!-- </div> -->
+	</div>
+	<script type="text/javascript" src="MainVueJs.js"></script>
+</body>
+</html> 
+
+<!-- {% endverbatim %} -->

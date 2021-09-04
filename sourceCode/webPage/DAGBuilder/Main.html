@@ -1,0 +1,151 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	<script src="DateFormat.js"></script>
+	<link rel="stylesheet" href="mystyle.css">
+</head>
+<body>
+	<div id="app">
+		<div>
+			<!-- 月選取文字部分 -->
+			<a class="changeCronATag" v-on:click="switchCronChangeWindow('Month')">
+				<label v-show="D_cronDataSetting.Month.cronType=='1'">
+					在{{cornMonth=='*' ? '每個' : cornMonth}}月
+				</label>
+				<label v-show="D_cronDataSetting.Month.cronType=='2'">
+					每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="12" v-model="D_cronDataSetting.Month.cron_Value"> 個月的
+				</label>
+				<div v-show='D_cronDataSetting.Month.windowShow' v-on:click.stop="" class="cronChangeWindow">
+					<!-- <div class='SwitchButtom_Main'> -->
+						<!-- <div class='SwitchButtom_OutSide' v-on:click="switchCronType('Month')"> -->
+							<!-- <div class='SwitchButtom_Table'> -->
+							<!-- </div> -->
+							<!-- <div class='SwitchButtom_ButtomBody'  -->
+							<!-- :class="D_cronDataSetting.Month.cronType == '1' ? 'Buttom_On_Color Buttom_On_Left' : 'Buttom_Off_Color Buttom_Off_Left'" -->
+							<!-- > -->
+								<!-- <div class='SwitchButtom_Buttom_face' :class="D_cronDataSetting.Month.cronType == '1' ? 'Buttom_On_Color' : 'Buttom_Off_Color'"> -->
+										<!-- {{D_cronDataSetting.Month.cronType == '1' ? '指定' : '間隔'}} -->
+								<!-- </div> -->
+							<!-- </div> -->
+						<!-- </div> -->
+					<!-- </div> -->
+					<select v-model="D_cronDataSetting.Month.cronType">
+						<option selected value=1>指定</option>
+						<option value=2>間隔</option>
+					</select>
+					<div v-show="D_cronDataSetting.Month.cronType == '1'" class='cronValueChoseWindow'>
+						<div style="clear:both;display: inline-block;width: 100%;">
+							<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Month.maxValue+1).keys()].slice(1)">
+								<label>{{list}}</label>
+								<input type="checkbox" :value="list" v-model="D_cronDataSetting.Month.cronCollect"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</a>
+			<!-- 日期選取文字部分 -->
+			<a class="changeCronATag" v-on:click="switchCronChangeWindow('Day')">
+				<label v-show="D_cronDataSetting.Day.cronType=='1'">
+					{{cornDay=='*' ? '每一日中' : '的'+cornDay+'號中'}}
+				</label>
+				<label v-show="D_cronDataSetting.Day.cronType=='2'">
+					每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="31" v-model="D_cronDataSetting.Day.cron_Value"> 天中
+				</label>
+				<div v-show='D_cronDataSetting.Day.windowShow' v-on:click.stop="" class="cronChangeWindow">
+					<select v-model="D_cronDataSetting.Day.cronType">
+						<option selected value=1>指定</option>
+						<option value=2>間隔</option>
+					</select>
+					<div v-show="D_cronDataSetting.Day.cronType == '1'" class='cronValueChoseWindow'>
+						<div style="clear:both;display: inline-block;width: 100%;">
+							<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Day.maxValue+1).keys()].slice(1)">
+								<label>{{list}}</label>
+								<input type="checkbox" :value="list" v-model="D_cronDataSetting.Day.cronCollect"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</a>
+			<!-- 小時選取文字部分 -->
+			<a class="changeCronATag" v-on:click="switchCronChangeWindow('Hour')" class="cronChangeWindow">
+				<label v-show="D_cronDataSetting.Hour.cronType=='1'">
+					{{cornHour=='*' ? '每個小時' : cornHour+'點'}}
+				</label>
+				<label v-show="D_cronDataSetting.Hour.cronType=='2'">
+					每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="23" v-model="D_cronDataSetting.Hour.cron_Value"> 小時中 的
+				</label>
+				<div v-show='D_cronDataSetting.Hour.windowShow' v-on:click.stop="" class="cronChangeWindow">
+					<select v-model="D_cronDataSetting.Hour.cronType">
+						<option selected value=1>指定</option>
+						<option value=2>間隔</option>
+					</select>
+					<div v-show="D_cronDataSetting.Hour.cronType == '1'" class='cronValueChoseWindow'>
+						<div style="clear:both;display: inline-block;width: 100%;">
+							<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Hour.maxValue+1).keys()]">
+								<label>{{list}}</label>
+								<input type="checkbox" :value="list" v-model="D_cronDataSetting.Hour.cronCollect"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</a>
+			<!-- 分鐘選取文字部分 -->
+			<a class="changeCronATag" v-on:click="switchCronChangeWindow('Minute')" class="cronChangeWindow">
+				<label v-show="D_cronDataSetting.Minute.cronType=='1'">
+					{{cornMinute=='*' ? '每一分鐘' : cornMinute+'分'}}
+				</label>
+				<label v-show="D_cronDataSetting.Minute.cronType=='2'">
+						每間隔 <input class='changeCronInput' v-on:click.stop="" type="number" step="1" min="1" max="59" v-model="D_cronDataSetting.Minute.cron_Value"> 分鐘
+				</label>
+				<div v-show='D_cronDataSetting.Minute.windowShow' v-on:click.stop="" class="cronChangeWindow">
+					<select v-model="D_cronDataSetting.Minute.cronType">
+						<option selected value=1>指定</option>
+						<option value=2>間隔</option>
+					</select>
+					<div v-show="D_cronDataSetting.Minute.cronType == '1'" class='cronValueChoseWindow'>
+						<div style="clear:both;display: inline-block;width: 100%;">
+							<div class="numberChoseCheckBox" v-for="list in [...Array(D_cronDataSetting.Minute.maxValue+1).keys()]">
+								<label>{{list}}</label>
+								<input type="checkbox" :value="list" v-model="D_cronDataSetting.Minute.cronCollect"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</a>
+			<!-- Weekday選取文字部分 -->
+			<!-- 指定日子 -->
+			<a class="changeCronATag">
+				<label>
+				並且為周
+				<div style="clear:both;display: inline-block;">
+					<div class="numberChoseCheckBox" v-for="list in [...Array(7).keys()]">
+						<label>{{weekdayChinese[list]}}</label>
+						<input type="checkbox" :value='list' v-model="cronWeekDayCollect"/>
+					</div>
+				</div>
+				時執行
+				</label>
+			</a>
+			
+			
+		</div>
+		
+		<br>
+		DAG設定: {{cornMinute}} {{cornHour}} {{cornDay}} {{cornMonth}} {{cornWeekday}}
+		<br>
+		<table>
+			<tbody>
+				<tr v-for="(time,index) of perViewCronDatetime" v-if="index<10">
+					<td>{{time}}</td>
+				</tr>
+				<tr v-else>
+					<td>....最多顯示10筆</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+</body>
+<script src="MainVueJs.js"></script>
+</html>

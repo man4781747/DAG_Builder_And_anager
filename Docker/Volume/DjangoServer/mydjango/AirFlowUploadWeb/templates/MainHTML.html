@@ -1,0 +1,149 @@
+ <!-- {% verbatim %} -->
+ <!DOCTYPE html>
+<html>
+<head>
+	<title>Air Flow DAG File Builder</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	
+	<style>
+		html {
+			margin : 0px;
+			background-color: #F0F0F0;
+		}
+		
+		body {
+			margin : 5px;
+			padding : 5px;
+			<!-- background-color: #F0F0F0; -->
+		}
+		
+		textarea {
+			width: 100%;
+			resize: vertical;
+			height: 150px;
+			min-height: 50px;
+		}
+		
+		.BigBlockTitle {
+			background-color: #FF00FF;
+		}
+		
+		.BigBlock label {
+			width : 150px;
+			display:inline-block
+		}
+		
+		.input_area {
+			margin : 5px;
+		}
+		
+		.dag_item {
+			margin : 5px;
+			padding : 5px;
+			border : 5px #FFAC55 solid;
+		}
+		
+		#right_window {
+			position: fixed;
+			top: 5px;
+			right: 5px;
+			width: 50%;
+			height : 100%;
+		}
+		
+		#left_window {
+			width: calc( 50% - 20px);
+			height : 100%;
+		}
+		#right_window_textarea {
+			height: calc( 100% - 50px);
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<div id="left_window">
+			<div>
+				<a :href="airflow_mainpage_url" target="_blank">AirFlow Main Parg</a>
+			</div>
+			<div class="BigBlock">
+				<p class="BigBlockTitle">Base Setting</p>
+				<div class="input_area">
+					<label>Owner:</label>
+					<input v-model="ownerValues">
+				</div>
+				<div class="input_area">
+					<label>Start Date:</label>
+					<input type="date" v-model="start_date"><input type="time" v-model="start_time">
+				</div>
+				<div class="input_area">
+					<label>Schedule:</label>
+					<input v-model="scheduleValues">
+				</div>
+				<div class="input_area">
+					<label>DAG ID:</label>
+					<input v-model="dagIdValue">
+				</div>
+				<div class="input_area">
+					<label>Description:</label>
+					<textarea v-model="dagDescriptionValue"></textarea>
+				</div>
+			</div>
+			<div class="BigBlock">
+				<p class="BigBlockTitle">Task Design</p>
+				<div>
+					<div id="ToolBox">
+						<select id="select_dag_item_list" v-model="dag_item_chose">
+							<option v-for="item in dag_item_list" :value="item" v-on:click="BuildNewDAGItem(item)">{{ item }}</option>
+						</select>
+					</div>
+					<div id="DesignArea">
+						<!-- <template v-for="keyChose in Object.keys(dag_item_build_list)"> -->
+						<template v-for="(keyChose, index) in dag_item_build_index">
+							<bash-operator-item 
+								v-if="dag_item_build_list[keyChose].type=='BashOperator'"
+								v-bind:post="dag_item_build_list[keyChose]"
+								v-bind:index="index"
+								v-bind:max_index="dag_item_build_index.length-1"
+								@delete-item="DelDAGItemByUuid"
+								@item-up="item_up"
+								@item-down="item_down"
+							></bash-operator-item>
+							<python-operator-item
+								v-else-if="dag_item_build_list[keyChose].type=='PythonOperator'"
+								v-bind:post="dag_item_build_list[keyChose]"
+								v-bind:index="index"
+								v-bind:max_index="dag_item_build_index.length-1"
+								@delete-item="DelDAGItemByUuid"
+								@item-up="item_up"
+								@item-down="item_down"
+							></python-operator-item>
+							<run-python-file-item
+								v-else-if="dag_item_build_list[keyChose].type=='RunPythonFile'"
+								v-bind:post="dag_item_build_list[keyChose]"
+								v-bind:index="index"
+								v-bind:max_index="dag_item_build_index.length-1"
+								@delete-item="DelDAGItemByUuid"
+								@item-up="item_up"
+								@item-down="item_down"
+							></run-python-file-item>
+						</template>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="right_window">
+			<div>
+				下載DAG檔案:<a onclick="clickDownload(this)" download="downlaod.py" href="#">download</a>	
+			</div>
+			<textarea id="right_window_textarea">
+				{{DAGFileString}}
+			</textarea>
+		</div>
+		
+	</div>
+	<script type="text/javascript" src="http://127.0.0.1:8000/static/test.js"></script>
+</body>
+</html> 
+
+<!-- {% endverbatim %} -->

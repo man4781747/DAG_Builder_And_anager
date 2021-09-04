@@ -1,0 +1,10 @@
+.dagRunStateCircle {
+	width: 2em;
+	background-color: antiquewhite;
+	height: 2em;
+	border-radius: 2em;
+	line-height: 2em;
+	text-align: center;
+	float: left;
+	margin: 0px 0.25em 0em 0.25em;
+}

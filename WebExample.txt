@@ -1,0 +1,19 @@
+####
+PythonOperatorTest
+
+def PythonOperatorTest(S_testSrt):
+    import os
+    S_logPath = os.path.join(os.path.split(os.path.realpath(__file__))[0], 'testTxt.txt')
+    with open(S_logPath , 'w', encoding="UTF-8") as f:
+        f.write(S_testSrt)
+
+"測試內容"
+
+####
+BashOperatorTest
+
+ls .
+
+####
+RunPythonFileTest
+SearchNEWs.py
